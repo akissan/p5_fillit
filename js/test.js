@@ -29,15 +29,7 @@ class termino {
       y: this.position.y - t2.position.y
     };
 
-    if (want_to_log) {
-      console.log(`COR_0 ${crossorigin.x} ${crossorigin.y}`);
-    }
-
     let crossoffset = { x: max(0, -crossorigin.x), y: max(0, -crossorigin.y) };
-
-    if (want_to_log) {
-      console.log(`COF_0 ${crossoffset.x} ${crossoffset.y}`);
-    }
 
     crossorigin.x = max(0, crossorigin.x);
     crossorigin.y = max(0, crossorigin.y);
@@ -46,12 +38,6 @@ class termino {
       w: min(t2.w - crossorigin.x, this.w - crossoffset.x),
       h: min(t2.h - crossorigin.y, this.h - crossoffset.y)
     };
-
-    if (want_to_log) {
-      console.log(`COR ${crossorigin.x} ${crossorigin.y}`);
-      console.log(`COF ${crossoffset.x} ${crossoffset.y}`);
-      console.log(`INT ${intersect.w} ${intersect.h}`);
-    }
 
     for (let i = crossoffset.x; i < crossoffset.x + intersect.w; i++) {
       for (let j = crossoffset.y; j < crossoffset.y + intersect.h; j++) {
@@ -227,14 +213,47 @@ function globalIntersect() {
 }
 
 function localIntersect(piece, arr) {
-  for (let i = 0; i < arr.length; i++) {
+  for (i = 0; i < arr.length; i++) {
     if (piece.tIntersect(arr[i], true)) {
-      return false;
+      return true;
     }
   }
-  return true;
+  return false;
 }
 
 function solve() {
-  console.log("SOLVER IS NOT PREPARED!");
+  let solution = [];
+  piece = terminos.pop();
+  let bound = { w: max(piece.w, piece.h), h: max(piece.w, piece.h) };
+  //console.log("SUKA EBANAYA: ", piece);
+  remaining = terminos;
+
+  while (!solver(piece, remaining, bound, solution)) {
+    piece = remaining.pop();
+    bound.w += 1;
+    bound.h += 1;
+  }
+
+  console.log("SUCCESS");
+  terminos = solution;
+}
+
+function solver(piece, remaining, bound, solution) {
+  for (let i = 0; i < bound.w - piece.w; i++) {
+    for (let j = 0; j < bound.h - piece.h; j++) {
+      piece.position.x = i;
+      piece.position.y = j;
+      if (!localIntersect(piece, solution)) {
+        solution.push(piece);
+        if (remaining.length > 0) {
+          if (solver(remaining.pop(), remaining, bound, solution)) return true;
+        } else {
+          return true;
+        }
+      }
+    }
+  }
+  solution.pop(piece);
+  remaining.push(piece);
+  return false;
 }
